@@ -124,7 +124,7 @@ def handle_calculate_IK(req):
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
-        rospy.loginfo("roll: %s, pitch: %s, yaw: %s" % roll, pitch, yaw))
+            rospy.loginfo("roll: %s, pitch: %s, yaw: %s" % roll, pitch, yaw)
      
             # Calculate joint angles using Geometric IK method
             T0_1.evalf(subs=sub_dict_zero)
