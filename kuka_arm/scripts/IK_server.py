@@ -164,13 +164,18 @@ def handle_calculate_IK(req):
             # Calculate joint angles using Geometric IK method
             theta1 = atan2(wy, wx) 
 
-	    s2 = wz - d1
-            w_x_off = wx
-            w_y_off = wy
-	    r = sqrt( w_x_off**2 + w_y_off**2 )
-	    theta2 = atan2(s2, r) - pi/25
-	    s3 = wz - (a2 + d1)
-	    theta3 = atan2(s3,r)
+	    x_c = sqrt(wx**2 + wy**2)
+            y_c = wz
+	    l35 = sqrt( a3**2 + d4**2 )
+            l25 = sqrt( x_c**2 + y_c**2 )
+
+            theta2_2 = atan2(y_c,sqrt(x_c))
+	    theta2_1 = atan2(sqrt( 1 - ( -l35**2 + a_2**2 + l25**2)**2) , ( -l35**2 + a_2**2 + l25**2))
+	    theta_2 = theta2_2 + theta2_1
+
+	    theta3_1 = atan2(a3, d4)
+            theta3_2 = arccos( (l25**2 - a2**2 - l35**2)/(2*a2*l35) )
+	    theta3 = theta3_2 - theta3_1 - pi/2
 
 	    print "theta1,2,3:",theta1, theta2, theta3 
 	     
