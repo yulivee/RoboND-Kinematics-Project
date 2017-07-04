@@ -19,6 +19,41 @@ from mpmath import *
 from sympy import *
 import numpy as np
 
+def get_wrist_pos(position, orientation):
+    
+    end_effector_length = 0.303
+    d6 = 0
+
+    roll  = orientation[0]
+    pitch = orientation[1]
+    yaw   = orientation[2]
+    
+    px = position[0]
+    py = position[1]
+    pz = position[2]
+    
+    
+    # Build a rotation matrix from the Roll, Pitch and Yaw angles
+    Rrpy = Matrix([[    cos(yaw)*cos(pitch),   cos(yaw)*sin(pitch)*sin(roll) - sin(yaw)*cos(roll),    cos(yaw)*sin(pitch)*cos(roll) + sin(yaw)*sin(roll)],
+                   [    sin(yaw)*cos(pitch),   sin(yaw)*sin(pitch)*sin(roll) + cos(yaw)*cos(roll),    sin(yaw)*sin(pitch)*cos(roll) - cos(yaw)*sin(roll)],
+                   [            -sin(pitch),             cos(pitch)*sin(roll),                                       cos(pitch)*cos(roll)               ]])
+
+    
+    # Extract l-vectors for transformation along the x-axis
+    lx = Rrpy[ 0, 0 ]
+    ly = Rrpy[ 0, 1 ]
+    lz = Rrpy[ 0, 2 ]
+
+
+    # Calculate Wrist Center
+    wx = px - ( end_effector_length + d6 ) * lx
+    wy = py - ( end_effector_length + d6 ) * ly
+    wz = pz - ( end_effector_length + d6 ) * lz
+
+    print("wx:",wx," wy:",wy," wz:",wz)
+    
+    return [ wx, wy, wz ]
+
 
 def handle_calculate_IK(req):
     rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
@@ -115,52 +150,16 @@ def handle_calculate_IK(req):
 
             
             # Extract end-effector position and orientation from request
-	    # px,py,pz = end-effector position
-	    # roll, pitch, yaw = end-effector orientation
-            end_effector_length = 0.303            
-
 	    px = req.poses[x].position.x
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
 
-            print "px:",px," py:",py," pz:",pz
-	    print "roll:",roll,"pitch:",pitch,"yaw:",yaw
-
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
-	
-	    R = tf.transformations.quaternion_matrix([req.poses[x].orientation.x, req.poses[x].orientation.y,req.poses[x].orientation.z, req.poses[x].orientation.w])
-	    al, be, ga = tf.transformations.euler_from_matrix(R,axes = 'ryzx')
 
-	    # End Effector Position
-	    p_ee = Matrix([ [ px ], [ py ], [ pz ] ] )
-
-	    # Define translation along X to Wrist Center
-            t_wc = Matrix([ [ 0 ], [ 0 ], [ 1 ] ] )
-
-	    # Build a rotation matrix from the Roll, Pitch and Yaw angles
-	    Rrpy = Matrix([[    cos(yaw)*cos(pitch),   cos(yaw)*sin(pitch)*sin(roll) - sin(yaw)*cos(roll),    cos(yaw)*sin(pitch)*cos(roll) + sin(yaw)*sin(roll)],
-			   [    sin(yaw)*cos(pitch),   sin(yaw)*sin(pitch)*sin(roll) + cos(yaw)*cos(roll),    sin(yaw)*sin(pitch)*cos(roll) - cos(yaw)*sin(roll)],
-			   [            -sin(pitch),             cos(pitch)*sin(roll),                                       cos(pitch)*cos(roll)               ]])
-
-            nx = Rrpy[ 2, 0 ]
-            ny = Rrpy[ 2, 1 ]
-            nz = Rrpy[ 2, 2 ]
-
-            print "lx:",lx," ly:",ly," lz:",lz
-
-	    d1 = 0.75
-	    a2 = 1.25
-	    d6 = 0
-
-	    # Calculate Wrist Center
-            wx = px - ( end_effector_lenght + d6 ) * nx
-            wy = py - ( end_effector_lenght + d6 ) * ny
-            wz = pz - ( end_effector_lenght + d6 ) * nz
-
-            print "wx:",wx," wy:",wy," wz:",wz
-
+            # see function get_wrist_pos on the calculation of the wrist center
+	    wrist_center_xyz = get_wrist_pos( [px, py, pz] , [roll, pitch, yaw] )
 	    
             # Calculate joint angles using Geometric IK method
             theta1 = atan2(wy, wx) 
