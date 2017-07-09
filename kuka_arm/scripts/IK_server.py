@@ -19,6 +19,41 @@ from mpmath import *
 from sympy import *
 import numpy as np
 
+def get_wrist_pos(position, orientation):
+    
+    end_effector_length = 0.303
+    d6 = 0
+
+    roll  = orientation[0]
+    pitch = orientation[1]
+    yaw   = orientation[2]
+    
+    px = position[0]
+    py = position[1]
+    pz = position[2]
+    
+    
+    # Build a rotation matrix from the Roll, Pitch and Yaw angles
+    Rrpy = Matrix([[    cos(yaw)*cos(pitch),   cos(yaw)*sin(pitch)*sin(roll) - sin(yaw)*cos(roll),    cos(yaw)*sin(pitch)*cos(roll) + sin(yaw)*sin(roll)],
+                   [    sin(yaw)*cos(pitch),   sin(yaw)*sin(pitch)*sin(roll) + cos(yaw)*cos(roll),    sin(yaw)*sin(pitch)*cos(roll) - cos(yaw)*sin(roll)],
+                   [            -sin(pitch),             cos(pitch)*sin(roll),                                       cos(pitch)*cos(roll)               ]])
+
+    
+    # Extract l-vectors for transformation along the x-axis
+    lx = Rrpy[ 0, 0 ]
+    ly = Rrpy[ 0, 1 ]
+    lz = Rrpy[ 0, 2 ]
+
+
+    # Calculate Wrist Center
+    wx = px - ( end_effector_length + d6 ) * lx
+    wy = py - ( end_effector_length + d6 ) * ly
+    wz = pz - ( end_effector_length + d6 ) * lz
+
+    print("wx:",wx," wy:",wy," wz:",wz)
+    
+    return [ wx, wy, wz ]
+
 
 def handle_calculate_IK(req):
     rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
@@ -115,26 +150,54 @@ def handle_calculate_IK(req):
 
             
             # Extract end-effector position and orientation from request
-	    # px,py,pz = end-effector position
-	    # roll, pitch, yaw = end-effector orientation
-            px = req.poses[x].position.x
+	    px = req.poses[x].position.x
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
 
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
-            rospy.loginfo("roll: %s, pitch: %s, yaw: %s" % roll, pitch, yaw)
-     
+
+            # see function get_wrist_pos on the calculation of the wrist center
+	    wrist_center_xyz = get_wrist_pos( [px, py, pz] , [roll, pitch, yaw] )
+	    
             # Calculate joint angles using Geometric IK method
-            T0_1.evalf(subs=sub_dict_zero)
-            T0_2.evalf(subs=sub_dict_zero)
-            T0_3.evalf(subs=sub_dict_zero)
-            T0_4.evalf(subs=sub_dict_zero)
-            T0_5.evalf(subs=sub_dict_zero)
-            T0_6.evalf(subs=sub_dict_zero)
-            T0_G.evalf(subs=sub_dict_zero)
-            T_total.evalf(subs=sub_dict_zero)
+            theta1 = atan2(wy, wx) 
+
+	    x_c = sqrt(wx**2 + wy**2)
+            y_c = wz
+	    l35 = sqrt( a3**2 + d4**2 )
+            l25 = sqrt( x_c**2 + y_c**2 )
+
+            theta2_2 = atan2(y_c,sqrt(x_c))
+	    theta2_1 = atan2(sqrt( 1 - ( -l35**2 + a_2**2 + l25**2)**2) , ( -l35**2 + a_2**2 + l25**2))
+	    theta_2 = theta2_2 + theta2_1
+
+	    theta3_1 = atan2(a3, d4)
+            theta3_2 = arccos( (l25**2 - a2**2 - l35**2)/(2*a2*l35) )
+	    theta3 = theta3_2 - theta3_1 - pi/2
+
+	    print "theta1,2,3:",theta1, theta2, theta3 
+	     
+	    ################################theta 4,5,6 calculation ############################################
+	    R0_3_eval = Matrix([[    sin(theta2 + theta3)*cos(theta1),   cos(theta1)*cos(theta2 + theta3),   -sin(theta1)],
+		[   sin(theta1)*sin(theta2 + theta3),   sin(theta1)*cos(theta2 + theta3),   cos(theta1)],
+		[   cos(theta2 + theta3),           -sin(theta2 + theta3),          0]])
+
+
+	    print "R0_3_eval:", R0_3_eval            
+
+
+	    R3_6_eval = R0_3_eval.inv() * Rrpy
+
+	    print "R3_6_eval:", R3_6_eval
+
+	    theta5 = acos(R3_6_eval[1,2])
+	    theta6 = asin(R3_6_eval[1,1] / (-sin(theta5)))
+	    theta4 = asin(R3_6_eval[2,2] / sin(theta5))
+
+	    print "theta4,5,6:",theta4,theta5,theta6
+	
 
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
