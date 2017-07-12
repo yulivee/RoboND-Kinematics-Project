@@ -23,6 +23,7 @@ from Inverse_Kinematics import IK
 
 def handle_calculate_IK(req):
     rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
+    print "Received %s eef-poses from the plan", len(req.poses)
     if len(req.poses) < 1:
         print "No valid poses received"
         return -1
@@ -44,25 +45,30 @@ def handle_calculate_IK(req):
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
 
-            rospy.loginfo("px, py, pz: %s, %s, %s" % px, py, pz )
+            rospy.loginfo("px, py, pz: %s, %s, %s", px, py, pz )
+            print "px, py, pz: ", px, py, pz
 
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                     [req.poses[x].orientation.x, req.poses[x].orientation.y,
                         req.poses[x].orientation.z, req.poses[x].orientation.w])
 
-            rospy.loginfo("roll, pitch, yaw: %s, %s, %s" % roll, pitch, yaw )
+            rospy.loginfo("roll, pitch, yaw: %s, %s, %s", roll, pitch, yaw )
+            print "roll, pitch, yaw: ", roll, pitch, yaw 
 
             myIK.get_wrist_rot_matrix( roll, pitch, yaw )
 
             wx, wy, wz = myIK.get_wrist_pos( px, py, pz )
-            rospy.loginfo("WC_x, WC_y, WC_z: %s, %s, %s" % wx, wy, wz )
+            rospy.loginfo("WC_x, WC_y, WC_z: %s, %s, %s", wx, wy, wz )
+            print "WC_x, WC_y, WC_z: ", wx, wy, wz
         
             theta_1, theta_2, theta_3 = myIK.get_theta_123( wx, wy, wz )
-            rospy.loginfo("theta_1, theta_2, theta_3: %s, %s, %s" % theta_1, theta_2, theta_3 )
+            rospy.loginfo("theta_1, theta_2, theta_3: %s, %s, %s", theta_1, theta_2, theta_3 )
+            print "theta_1, theta_2, theta_3: ", theta_1, theta_2, theta_3
 
             R_3_6 = myIK.transform_to_wc( theta_1, theta_2, theta_3 )
             theta_4, theta_5, theta_6 = IK.get_theta_456( R_3_6 )
-            rospy.loginfo("theta_4, theta_5, theta_6: %s, %s, %s" % theta_4, theta_5, theta_6 )
+            rospy.loginfo("theta_4, theta_5, theta_6: %s, %s, %s", theta_4, theta_5, theta_6 )
+            print "theta_4, theta_5, theta_6: ", theta_4, theta_5, theta_6
             
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
@@ -70,13 +76,14 @@ def handle_calculate_IK(req):
             joint_trajectory_list.append(joint_trajectory_point)
 
             rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
+            print "length of Joint Trajectory List: %s" , len(joint_trajectory_list)
 
         return CalculateIKResponse(joint_trajectory_list)
 
 
 def IK_server():
     # initialize node and declare calculate_ik service
-    rospy.init_node('IK_server')
+    rospy.init_node('IK_server', log_level=rospy.DEBUG)
     print "Calculating Transformation Matrices"
     FK.init_kinematics()
     s = rospy.Service('calculate_ik', CalculateIK, handle_calculate_IK)

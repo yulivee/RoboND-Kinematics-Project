@@ -99,10 +99,6 @@ class IK:
         r22 = R3_6_eval[1,1]
         r21 = R3_6_eval[1,0]
         
-        #print("sin(q5): ", sin_q5_var)
-        # sin(q5)² * ( cos(q4)² + sin(q4)²)
-        # cos(q4)² + sin(q4)² = 1
-        # => sqrt(r13² + r33²) = sin(q5)
         sin_q5 = sqrt(r13**2 + r33**2).evalf()
                
         theta5 = atan2( sin_q5, r23 ).evalf()
