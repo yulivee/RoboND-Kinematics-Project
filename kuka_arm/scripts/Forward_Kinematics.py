@@ -47,10 +47,9 @@ class FK:
         T0_6 = simplify( T0_5 * T5_6 )      # base_link to link_6
         T0_G = simplify( T0_6 * T6_G )      # base_link to link_G
         T0_G_corr = simplify(T0_G * R_corr) # Total HT between base_link and gripper_link with orientation correction applied
+	R0_3 = simplify( T0_1 * T1_2 * T2_3 )
 
-        self.T0_1 = T0_1
-        self.T1_2 = T1_2
-        self.T2_3 = T2_3
+	self.R0_3 = R0_3
         self.T0_5 = T0_5
         self.T0_G_corr = T0_G_corr
         self.R_corr = R_corr

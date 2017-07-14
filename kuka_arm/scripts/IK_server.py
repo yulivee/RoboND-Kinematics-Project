@@ -34,7 +34,7 @@ def handle_calculate_IK(req):
             # IK code starts here
             joint_trajectory_point = JointTrajectoryPoint()
 
-            myIK = IK(myFK.T0_1, myFK.T1_2, myFK.T2_3, myFK.symbols, myFK.q1, myFK.q2, myFK.q3, myFK.R_corr)
+            myIK = IK(myFK.R0_3, myFK.symbols, myFK.q1, myFK.q2, myFK.q3, myFK.R_corr)
             
             # Extract end-effector position and orientation from request
             px = req.poses[x].position.x

@@ -59,7 +59,7 @@ def test_code(test_case):
     start_time = time()
     ########################################################################################
     ## Insert IK code here starting at: Define DH parameter symbols
-    myIK = IK(myFK.T0_1, myFK.T1_2, myFK.T2_3, myFK.symbols, myFK.q1, myFK.q2, myFK.q3, myFK.R_corr)
+    myIK = IK(myFK.R0_3, myFK.symbols, myFK.q1, myFK.q2, myFK.q3, myFK.R_corr)
     
     # Extract end-effector position and orientation from request
     px = position.x
@@ -170,8 +170,9 @@ def test_code(test_case):
 
 if __name__ == "__main__":
     # Change test case number for different scenarios
-    test_case_number = 1
     print "Pre-Calculating Transformation Matrices"
     myFK = FK()
-    print "Starting Testcase"
-    test_code(test_cases[test_case_number])
+    print "Starting Testcases"
+    for test_case_number in range(1, 4):    
+        print "---------------------------- Testcase Number ", test_case_number, " ----------------------------"
+        test_code(test_cases[test_case_number])

@@ -5,8 +5,8 @@ import numpy as np
 
 class IK:
 
-    def __init__(self,T0_1, T1_2, T2_3, symbols, q1, q2, q3, R_corr):
-        self.end_effector_length = 0.303 #0.453 #0.303
+    def __init__(self,R0_3, symbols, q1, q2, q3, R_corr):
+        self.end_effector_length = 0.453 # 0.303 #0.453 #0.303
         self.Rrpy = None
         self.a_1 = 0.35
         self.a_2 = 1.25
@@ -14,9 +14,7 @@ class IK:
         self.d_4 = 1.50
         self.d_6 = 0
         self.a_3 = -0.054
-        self.T0_1 = T0_1
-        self.T1_2 = T1_2 
-        self.T2_3 = T2_3
+        self.R0_3 = R0_3
 	self.q1 = q1
 	self.q2 = q2
 	self.q3 = q3
@@ -26,23 +24,23 @@ class IK:
     # Build a rotation matrix from the Roll, Pitch and Yaw angles
     def get_wrist_rot_matrix(self, roll, pitch, yaw):
 
-        R_z =  Matrix([[     cos(yaw), -sin(yaw),             0],
-                       [     sin(yaw),  cos(yaw),             0],
-                       [              0,           0,             1]])
+        #R_z =  Matrix([[     cos(yaw), -sin(yaw),             0],
+        #               [     sin(yaw),  cos(yaw),             0],
+        #               [              0,           0,             1]])
 
-        R_y =  Matrix([[  cos(pitch),           0, sin(pitch)],
-                       [              0,           1,             0],
-                       [ -sin(pitch),           0, cos(pitch)]])
+        #R_y =  Matrix([[  cos(pitch),           0, sin(pitch)],
+        #               [              0,           1,             0],
+        #               [ -sin(pitch),           0, cos(pitch)]])
     
-        R_x = Matrix([[ 1,              0,        0],
-                     [ 0,        cos(roll), -sin(roll)],
-                     [ 0,        sin(roll),  cos(roll)]])
+        #R_x = Matrix([[ 1,              0,        0],
+        #             [ 0,        cos(roll), -sin(roll)],
+        #             [ 0,        sin(roll),  cos(roll)]])
     
-        Rrpy = simplify ( R_z * R_y * R_x )
+        #Rrpy = simplify ( R_z * R_y * R_x )
             
      
-        # Rrpy = Rz * Ry * Rx
-        Rrpy_2 = Matrix([[    cos(yaw)*cos(pitch),   cos(yaw)*sin(pitch)*sin(roll) - sin(yaw)*cos(roll),    cos(yaw)*sin(pitch)*cos(roll) + sin(yaw)*sin(roll)],
+        # Rrpy = Rz * Ry * Rx. Values precalculated to save precious time
+        Rrpy = Matrix([[    cos(yaw)*cos(pitch),   cos(yaw)*sin(pitch)*sin(roll) - sin(yaw)*cos(roll),    cos(yaw)*sin(pitch)*cos(roll) + sin(yaw)*sin(roll)],
                          [    sin(yaw)*cos(pitch),   sin(yaw)*sin(pitch)*sin(roll) + cos(yaw)*cos(roll),    sin(yaw)*sin(pitch)*cos(roll) - cos(yaw)*sin(roll)],
                          [            -sin(pitch),             cos(pitch)*sin(roll),                                       cos(pitch)*cos(roll)               ]])
 
@@ -104,7 +102,7 @@ class IK:
 
     def transform_to_wc(self, theta1, theta2, theta3):
      
-        R0_3 = simplify( self.T0_1 * self.T1_2 * self.T2_3 )
+        R0_3 = self.R0_3
         R0_3 = R0_3.evalf(subs={self.q1: theta1, self.q2: theta2, self.q3: theta3})
         R3_6_eval = R0_3.inv() * self.Rrpy * self.R_corr
         return R3_6_eval        
@@ -117,6 +115,14 @@ class IK:
         r21 = R3_6_eval[1,0]
         
         sin_q5 = sqrt(r13**2 + r33**2).evalf()
+	print "sin(q5): ", sin_q5
+        theta41 = atan2( -r33,  r13).evalf()
+        theta61 = atan2(  r22, -r21).evalf()
+        theta42 = atan2(  r33, -r13).evalf()
+        theta62 = atan2( -r22,  r21).evalf()
+
+	print "theta 4:", theta41, "alternative theta 4: ", theta42
+	print "theta 6:", theta61, "alternative theta 6: ", theta62
                
         theta5 = atan2( sin_q5, r23 ).evalf()
         
