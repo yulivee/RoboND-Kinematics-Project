@@ -24,6 +24,18 @@ test_cases = {1:[[[2.16135,-1.42635,1.55109],
                   [0.01735,-0.2179,0.9025,0.371016]],
                   [-1.1669,-0.17989,0.85137],
                   [-2.99,-0.12,0.94,4.06,1.29,-4.12]],
+              4:[[[2.3099,0          ,1.9465      ], # EE Position
+                  [0     ,-0.00014835,0     ,1    ]],# EE orientation in quaternions
+                  [1.8499,0          ,1.9464      ], # WC location
+                  [0     ,0          ,0     ,0,0,0]],# joint angles
+              5:[[[-0.16657, -1.5542    , 1.4995                    ], # EE Position
+                  [0.32196 , -0.28668   , -0.74205 ,0.51334         ]],# EE orientation in quaternions
+                  [-0.32358, -1.5542    , 1.4995                    ], # WC location
+                  [1.38    , -0.16      , -3.30 ,0.54 ,0.16 ,3.51   ]],# joint angles
+              6:[[[-0.5640 , 0.75628    , 3.6653                    ], # EE Position
+                  [-0.0889 , -0.58475   , 0.42441  ,0.68558         ]],# EE orientation in quaternions
+                  [-0.7211 , 0.75628    , 3.6653                    ], # WC location
+                  [2.48    , 0.17       , -1.55 ,-1.03 ,0.65 ,-0.88 ]],# joint angles
              }
 
 
@@ -173,6 +185,6 @@ if __name__ == "__main__":
     print "Pre-Calculating Transformation Matrices"
     myFK = FK()
     print "Starting Testcases"
-    for test_case_number in range(1, 4):    
+    for test_case_number in range(1, 6):    
         print "---------------------------- Testcase Number ", test_case_number, " ----------------------------"
         test_code(test_cases[test_case_number])

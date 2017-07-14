@@ -6,7 +6,7 @@ import numpy as np
 class IK:
 
     def __init__(self,R0_3, symbols, q1, q2, q3, R_corr):
-        self.end_effector_length = 0.453 # 0.303 #0.453 #0.303
+        self.end_effector_length =  0.303 #0.453
         self.Rrpy = None
         self.a_1 = 0.35
         self.a_2 = 1.25
@@ -20,6 +20,10 @@ class IK:
 	self.q3 = q3
         self.symbols = symbols
 	self.R_corr = R_corr
+	self.last_t4 = 0.1
+	self.last_t5 = 0.1
+	self.last_t6 = 0.1
+
 
     # Build a rotation matrix from the Roll, Pitch and Yaw angles
     def get_wrist_rot_matrix(self, roll, pitch, yaw):
@@ -71,30 +75,26 @@ class IK:
     #Calculate joint angles using Geometric IK method
     def get_theta_123 (self, wx, wy, wz):
         
-        theta1 = atan2(wy, wx)
+        theta1  = atan2(wy, wx).evalf()
+        theta11 = atan2(wy, -wx).evalf()
+        theta12 = atan2(-wy, wx).evalf()
+        theta13 = atan2(-wy, -wx).evalf()
+	print "theta 1:  ", theta1, "theta 11: ", theta11, "theta 12: ", theta12, "theta 13: ", theta13
         
 	r = sqrt( wx**2 + wy**2) - self.a_1
-        #x_c = wx - self.a_1 # Subtract a1 as horizontal offset from robot-base
         z_c = wz - self.d_1 # Subtract d1 as vertical offset from robot base
         
-        #L_25 = sqrt(x_c**2 + z_c**2)
 	L_25 = sqrt(r**2 + z_c**2)
         L_35 = sqrt(self.a_3**2+ self.d_4**2)
         
         beta_2 = atan2( z_c, r )
-        #beta_2 = atan2( z_c, x_c )
         cos_beta_1 = ( ( L_35**2 - L_25**2 - self.a_2**2 ) / ( - 2 * L_25 * self.a_2 ) )
-        #beta_1 = acos ( cos_beta_1 )
         beta_1 = atan2(  sqrt( 1 - cos_beta_1**2 ), cos_beta_1 ) 
-        #beta_12 = atan2(  - sqrt( 1 - cos_beta_1**2 ), cos_beta_1 ) 
         theta2 = np.pi/2 - beta_1 - beta_2
-	# flipped 
         
         beta_4 = atan2( - self.a_3, self.d_4)
         cos_beta_3 = ( L_25**2 - self.a_2**2 - L_35**2) / ( -2 * self.a_2 * L_35 )
-        #beta_3 = acos ( cos_beta_3 )
         beta_3 = atan2( sqrt( 1 - cos_beta_3**2 ), cos_beta_3 )
-        #beta_32 = atan2( - sqrt( 1 - cos_theta_3**2 ), cos_theta_3 )
         theta3 = np.pi/2 - beta_3 - beta_4
 
 
@@ -108,29 +108,39 @@ class IK:
         return R3_6_eval        
 
     def get_theta_456(self, R3_6_eval):
+        r12 = R3_6_eval[0,1]
         r13 = R3_6_eval[0,2]
-        r33 = R3_6_eval[2,2]
-        r23 = R3_6_eval[1,2]
-        r22 = R3_6_eval[1,1]
-        r21 = R3_6_eval[1,0]
-        
-        sin_q5 = sqrt(r13**2 + r33**2).evalf()
-	print "sin(q5): ", sin_q5
-        theta41 = atan2( -r33,  r13).evalf()
-        theta61 = atan2(  r22, -r21).evalf()
-        theta42 = atan2(  r33, -r13).evalf()
-        theta62 = atan2( -r22,  r21).evalf()
 
-	print "theta 4:", theta41, "alternative theta 4: ", theta42
-	print "theta 6:", theta61, "alternative theta 6: ", theta62
-               
-        theta5 = atan2( sin_q5, r23 ).evalf()
+        r21 = R3_6_eval[1,0]
+        r22 = R3_6_eval[1,1]
+        r23 = R3_6_eval[1,2]
+
+        r32 = R3_6_eval[2,1]
+        r33 = R3_6_eval[2,2]
         
-        if( sin_q5 < 0 ):
-            theta4 = atan2( -r33,  r13).evalf()
-            theta6 = atan2(  r22, -r21).evalf()
+	# when theta5 is 0 we encounter a wrist singularity and cannot obtain theta4 and theta6 from r33/r13 r22/r21
+        # in this case we set theta6 to its last value, theta 5 to zero and calculate theta4 in correspondence to theta6
+	if np.abs(r23) is not 1:
+            sin_q5 = sqrt(r13**2 + r33**2).evalf()
+	    print "sin(q5): ", sin_q5
+            theta5 = atan2( sin_q5, r23 ).evalf()
+            if( sin_q5 < 0 ):
+                theta4 = atan2( -r33,  r13).evalf()
+                theta6 = atan2(  r22, -r21).evalf()
+            else:
+                theta4 = atan2(  r33, -r13).evalf()
+                theta6 = atan2( -r22,  r21).evalf()
         else:
-            theta4 = atan2(  r33, -r13).evalf()
-            theta6 = atan2( -r22,  r21).evalf()
+            theta6 = self.last_t6
+	    if ( r23 == 1  ):
+	        theta5 = 0
+                theta4 = -theta6 + atan2( -r12,  -r32).evalf()
+	    else:
+                theta5 = 0
+                theta4 = theta6 + atan2( r12,  -r32).evalf()
+        
+        self.last_t4 = theta4
+        self.last_t5 = theta5
+        self.last_t6 = theta6
         
         return theta4, theta5, theta6
