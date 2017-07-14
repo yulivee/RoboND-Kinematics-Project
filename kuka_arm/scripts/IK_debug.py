@@ -2,6 +2,8 @@ from sympy import *
 from time import time
 from mpmath import radians
 import tf
+from Forward_Kinematics import FK
+from Inverse_Kinematics import IK
 
 '''
 Format of test case is [ [[EE position],[EE orientation as rpy]],[WC location],[joint angles]]
@@ -60,8 +62,33 @@ def test_code(test_case):
     start_time = time()
     ########################################################################################
     ## Insert IK code here starting at: Define DH parameter symbols
+    myIK = IK(myFK.T0_1, myFK.T1_2, myFK.T2_3, myFK.symbols, myFK.q1, myFK.q2, myFK.q3)
+    
+    # Extract end-effector position and orientation from request
+    px = position.x
+    py = position.y
+    pz = position.z
 
-    ## YOUR CODE HERE!
+    rospy.loginfo("px:   [ %7.4f ] py:    [ %7.4f ] pz:  [ %7.4f ]", px, py, pz )
+
+    (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
+            [orientation.x, orientation.y,
+                orientation.z, orientation.w])
+
+    rospy.loginfo("roll: [ %7.4f ] pitch: [ %7.4f ] yaw: [ %7.4f ]", roll, pitch, yaw )
+
+    myIK.get_wrist_rot_matrix( roll, pitch, yaw )
+
+    wx, wy, wz = myIK.get_wrist_pos( px, py, pz )
+    rospy.loginfo("WC_x: [ %7.4f ] WC_y: [ %7.4f ] WC_z: [  %7.4f ]", wx, wy, wz )
+
+    theta_1, theta_2, theta_3 = myIK.get_theta_123( wx, wy, wz )
+    rospy.loginfo("theta_1: [ %7.4f ] theta_2: [ %7.4f ] theta_3: [ %7.4f ]", theta_1, theta_2, theta_3 )
+
+    R_3_6 = myIK.transform_to_wc( theta_1, theta_2, theta_3 )
+    theta_4, theta_5, theta_6 = myIK.get_theta_456( R_3_6 )
+    rospy.loginfo("theta_4: [ %7.4f ] theta_5: [ %7.4f ] theta_6: [ %7.4f ]", theta_4, theta_5, theta_6 )
+
 
     ## Ending at: Populate response for the IK request
     ########################################################################################
@@ -75,7 +102,7 @@ def test_code(test_case):
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
-    your_wc = [1,1,1] # <--- Load your calculated WC values in this array
+    your_wc = [wx,wy,wz] # <--- Load your calculated WC values in this array
     your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
     ########################################################################################
 
@@ -128,5 +155,7 @@ def test_code(test_case):
 if __name__ == "__main__":
     # Change test case number for different scenarios
     test_case_number = 1
-
+    print "Pre-Calculating Transformation Matrices"
+    myFK = FK()
+    print "Starting Testcase"
     test_code(test_cases[test_case_number])
