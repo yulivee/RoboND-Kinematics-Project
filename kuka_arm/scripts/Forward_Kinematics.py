@@ -51,7 +51,9 @@ class FK:
         self.T0_1 = T0_1
         self.T1_2 = T1_2
         self.T2_3 = T2_3
+        self.T0_5 = T0_5
         self.T0_G_corr = T0_G_corr
+        self.R_corr = R_corr
 
         return
 
@@ -90,3 +92,14 @@ class FK:
         ey = EEpos[1,0]
         ez = EEpos[2,0]
         return ex, ey, ez
+
+    def calculate_J5_pose( self, theta1, theta2, theta3, theta4, theta5, theta6 ):
+    
+	J5pos = simplify( self.T0_5 * self.R_corr ) 
+        new_J5 = J5pos.evalf( subs={ self.q1: theta1, self.q2: theta2, self.q3: theta3, self.q4: theta4, self.q5: theta5, self.q6: theta6 } )
+        Test = Matrix([[1.0],[1.0],[1.0],[1.0]])
+	new_J5 = simplify( new_J5 * Test )
+        jx = new_J5[0,0]
+        jy = new_J5[1,0]
+        jz = new_J5[2,0]
+        return jx, jy, jz

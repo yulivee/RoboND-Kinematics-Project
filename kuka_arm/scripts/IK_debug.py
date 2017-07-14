@@ -59,32 +59,47 @@ def test_code(test_case):
     start_time = time()
     ########################################################################################
     ## Insert IK code here starting at: Define DH parameter symbols
-    myIK = IK(myFK.T0_1, myFK.T1_2, myFK.T2_3, myFK.symbols, myFK.q1, myFK.q2, myFK.q3)
+    myIK = IK(myFK.T0_1, myFK.T1_2, myFK.T2_3, myFK.symbols, myFK.q1, myFK.q2, myFK.q3, myFK.R_corr)
     
     # Extract end-effector position and orientation from request
     px = position.x
     py = position.y
     pz = position.z
 
+    print "Px, Py, Pz provided by testdata (udacity)"
     print "px:   [ %7.4f ] py:    [ %7.4f ] pz:   [ %7.4f ]" % ( px, py, pz )
 
     (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
             [orientation.x, orientation.y,
                 orientation.z, orientation.w])
 
+    print "Roll, Pitch, Yaw provided by testdata (udacity)"
     print "roll: [ %7.4f ] pitch: [ %7.4f ] yaw:  [ %7.4f ]" % ( roll, pitch, yaw )
+    print ""
 
     myIK.get_wrist_rot_matrix( roll, pitch, yaw )
 
     wx, wy, wz = myIK.get_wrist_pos( px, py, pz )
+    print "Calculated values for WC (mine)"
     print "WC_x: [ %7.4f ] WC_y:  [ %7.4f ] WC_z: [  %7.4f ]" % ( wx, wy, wz )
+    print "Expected values for WC (udacity)"
+    print "WC_x: [ %7.4f ] WC_y:  [ %7.4f ] WC_z: [  %7.4f ]" % ( test_case[1][0], test_case[1][1], test_case[1][2] )
+    print ""
 
     theta1, theta2, theta3 = myIK.get_theta_123( wx, wy, wz )
+    print "Calculated values for Theta1 - Theta3 (mine)"
     print "theta1: [ %7.4f ] theta2: [ %7.4f ] theta3: [ %7.4f ]" % ( theta1, theta2, theta3 )
+    print "Expected values for Theta1 - Theta3 (udacity)"
+    print "theta1: [ %7.4f ] theta2: [ %7.4f ] theta3: [ %7.4f ]" % ( test_case[2][0], test_case[2][0], test_case[2][0] )
+    print ""
 
     R3_6 = myIK.transform_to_wc( theta1, theta2, theta3 )
     theta4, theta5, theta6 = myIK.get_theta_456( R3_6 )
+    print "Calculated values for Theta4 - Theta6 (mine)"
     print "theta4: [ %7.4f ] theta5: [ %7.4f ] theta6: [ %7.4f ]" % ( theta4, theta5, theta6 )
+    print "Expected values for Theta4 - Theta6 (udacity)"
+    print "theta4: [ %7.4f ] theta5: [ %7.4f ] theta6: [ %7.4f ]" % ( test_case[2][3], test_case[2][4], test_case[2][5] )
+    print ""
 
 
     ## Ending at: Populate response for the IK request
@@ -94,6 +109,10 @@ def test_code(test_case):
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
 
     ex, ey, ez = myFK.calculate_FK_pose( theta1, theta2, theta3, theta4, theta5, theta6 )
+    j5x, j5y, j5z = myFK.calculate_J5_pose( theta1, theta2, theta3, theta4, theta5, theta6 )
+    print "Joint5 (mine)"
+    print "J5_x: [ %7.4f ] J5_y:  [ %7.4f ] J5_z: [  %7.4f ]" % ( j5x, j5y, j5z )
+
     ## End your code input for forward kinematics here!
     ########################################################################################
 
