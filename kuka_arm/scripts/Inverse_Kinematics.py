@@ -6,7 +6,7 @@ import numpy as np
 class IK:
 
     def __init__(self,T0_1, T1_2, T2_3, symbols, q1, q2, q3):
-        self.end_effector_length = 0.453 #0.303
+        self.end_effector_length = 0.303 #0.453 #0.303
         self.Rrpy = None
         self.a_1 = 0.35
         self.a_2 = 1.25

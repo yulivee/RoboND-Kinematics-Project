@@ -24,13 +24,10 @@ test_cases = {1:[[[2.16135,-1.42635,1.55109],
                   [0.01735,-0.2179,0.9025,0.371016]],
                   [-1.1669,-0.17989,0.85137],
                   [-2.99,-0.12,0.94,4.06,1.29,-4.12]],
-              4:[],
-              5:[]}
+             }
 
 
 def test_code(test_case):
-    ## Set up code
-    ## Do not modify!
     x = 0
     class Position:
         def __init__(self,EE_pos):
@@ -69,25 +66,25 @@ def test_code(test_case):
     py = position.y
     pz = position.z
 
-    rospy.loginfo("px:   [ %7.4f ] py:    [ %7.4f ] pz:  [ %7.4f ]", px, py, pz )
+    print "px:   [ %7.4f ] py:    [ %7.4f ] pz:   [ %7.4f ]" % ( px, py, pz )
 
     (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
             [orientation.x, orientation.y,
                 orientation.z, orientation.w])
 
-    rospy.loginfo("roll: [ %7.4f ] pitch: [ %7.4f ] yaw: [ %7.4f ]", roll, pitch, yaw )
+    print "roll: [ %7.4f ] pitch: [ %7.4f ] yaw:  [ %7.4f ]" % ( roll, pitch, yaw )
 
     myIK.get_wrist_rot_matrix( roll, pitch, yaw )
 
     wx, wy, wz = myIK.get_wrist_pos( px, py, pz )
-    rospy.loginfo("WC_x: [ %7.4f ] WC_y: [ %7.4f ] WC_z: [  %7.4f ]", wx, wy, wz )
+    print "WC_x: [ %7.4f ] WC_y:  [ %7.4f ] WC_z: [  %7.4f ]" % ( wx, wy, wz )
 
-    theta_1, theta_2, theta_3 = myIK.get_theta_123( wx, wy, wz )
-    rospy.loginfo("theta_1: [ %7.4f ] theta_2: [ %7.4f ] theta_3: [ %7.4f ]", theta_1, theta_2, theta_3 )
+    theta1, theta2, theta3 = myIK.get_theta_123( wx, wy, wz )
+    print "theta1: [ %7.4f ] theta2: [ %7.4f ] theta3: [ %7.4f ]" % ( theta1, theta2, theta3 )
 
-    R_3_6 = myIK.transform_to_wc( theta_1, theta_2, theta_3 )
-    theta_4, theta_5, theta_6 = myIK.get_theta_456( R_3_6 )
-    rospy.loginfo("theta_4: [ %7.4f ] theta_5: [ %7.4f ] theta_6: [ %7.4f ]", theta_4, theta_5, theta_6 )
+    R3_6 = myIK.transform_to_wc( theta1, theta2, theta3 )
+    theta4, theta5, theta6 = myIK.get_theta_456( R3_6 )
+    print "theta4: [ %7.4f ] theta5: [ %7.4f ] theta6: [ %7.4f ]" % ( theta4, theta5, theta6 )
 
 
     ## Ending at: Populate response for the IK request
@@ -96,15 +93,15 @@ def test_code(test_case):
     ## For additional debugging add your forward kinematics here. Use your previously calculated thetas
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
 
-    ## (OPTIONAL) YOUR CODE HERE!
-
+    ex, ey, ez = myFK.calculate_FK_pose( theta1, theta2, theta3, theta4, theta5, theta6 )
     ## End your code input for forward kinematics here!
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
-    your_wc = [wx,wy,wz] # <--- Load your calculated WC values in this array
-    your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
-    ########################################################################################
+    your_wc = [ wx, wy, wz ] # <--- Load your calculated WC values in this array
+    your_ee = [ ex, ey, ez ] # <--- Load your calculated end effector value from your forward kinematics
+    # your_ee = [ 1, 1, 1 ] # <--- Load your calculated end effector value from your forward kinematics
+    ######################################################################################
 
     ## Error analysis
     print ("\nTotal run time to calculate joint angles from pose is %04.4f seconds" % (time()-start_time))
