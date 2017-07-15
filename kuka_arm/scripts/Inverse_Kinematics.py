@@ -15,14 +15,14 @@ class IK:
         self.d_6 = 0
         self.a_3 = -0.054
         self.R0_3 = R0_3
-	self.q1 = q1
-	self.q2 = q2
-	self.q3 = q3
+        self.q1 = q1
+        self.q2 = q2
+        self.q3 = q3
         self.symbols = symbols
-	self.R_corr = R_corr
-	self.last_t4 = 0.1
-	self.last_t5 = 0.1
-	self.last_t6 = 0.1
+        self.R_corr = R_corr
+        self.last_t4 = 0.1
+        self.last_t5 = 0.1
+        self.last_t6 = 0.1
 
 
     # Build a rotation matrix from the Roll, Pitch and Yaw angles
@@ -77,10 +77,10 @@ class IK:
         
         theta1  = atan2(wy, wx).evalf()
         
-	r = sqrt( wx**2 + wy**2) - self.a_1
+        r = sqrt( wx**2 + wy**2) - self.a_1
         z_c = wz - self.d_1 # Subtract d1 as vertical offset from robot base
         
-	L_25 = sqrt(r**2 + z_c**2)
+        L_25 = sqrt(r**2 + z_c**2)
         L_35 = sqrt(self.a_3**2+ self.d_4**2)
         
         beta_2 = atan2( z_c, r )
@@ -114,9 +114,9 @@ class IK:
         r32 = R3_6_eval[2,1]
         r33 = R3_6_eval[2,2]
         
-	# when theta5 is 0 we encounter a wrist singularity and cannot obtain theta4 and theta6 from r33/r13 r22/r21
+        # when theta5 is 0 we encounter a wrist singularity and cannot obtain theta4 and theta6 from r33/r13 r22/r21
         # in this case we set theta6 to its last value, theta 5 to zero and calculate theta4 in correspondence to theta6
-	if np.abs(r23) is not 1:
+        if np.abs(r23) is not 1:
             sin_q5 = sqrt(r13**2 + r33**2).evalf()
             theta5 = atan2( sin_q5, r23 ).evalf()
             if( sin_q5 < 0 ):
@@ -127,11 +127,10 @@ class IK:
                 theta6 = atan2( -r22,  r21).evalf()
         else:
             theta6 = self.last_t6
-	    if ( r23 == 1  ):
-	        theta5 = 0
+            theta5 = 0
+            if ( r23 == 1  ):
                 theta4 = -theta6 + atan2( -r12,  -r32).evalf()
-	    else:
-                theta5 = 0
+            else:
                 theta4 = theta6 + atan2( r12,  -r32).evalf()
         
         self.last_t4 = theta4
