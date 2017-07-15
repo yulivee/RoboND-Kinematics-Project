@@ -76,10 +76,6 @@ class IK:
     def get_theta_123 (self, wx, wy, wz):
         
         theta1  = atan2(wy, wx).evalf()
-        theta11 = atan2(wy, -wx).evalf()
-        theta12 = atan2(-wy, wx).evalf()
-        theta13 = atan2(-wy, -wx).evalf()
-	print "theta 1:  ", theta1, "theta 11: ", theta11, "theta 12: ", theta12, "theta 13: ", theta13
         
 	r = sqrt( wx**2 + wy**2) - self.a_1
         z_c = wz - self.d_1 # Subtract d1 as vertical offset from robot base
@@ -122,7 +118,6 @@ class IK:
         # in this case we set theta6 to its last value, theta 5 to zero and calculate theta4 in correspondence to theta6
 	if np.abs(r23) is not 1:
             sin_q5 = sqrt(r13**2 + r33**2).evalf()
-	    print "sin(q5): ", sin_q5
             theta5 = atan2( sin_q5, r23 ).evalf()
             if( sin_q5 < 0 ):
                 theta4 = atan2( -r33,  r13).evalf()
