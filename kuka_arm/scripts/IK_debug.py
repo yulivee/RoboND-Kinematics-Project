@@ -185,6 +185,6 @@ if __name__ == "__main__":
     print "Pre-Calculating Transformation Matrices"
     myFK = FK()
     print "Starting Testcases"
-    for test_case_number in range(1, 6):    
+    for test_case_number in range(1, 2):    
         print "---------------------------- Testcase Number ", test_case_number, " ----------------------------"
         test_code(test_cases[test_case_number])
